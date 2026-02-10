@@ -32,4 +32,11 @@ define('MIN_HC_VER', '2.1.1');
 if (!(extension_loaded('apcu') && function_exists('apcu_fetch') && apcu_enabled())) {
     die("APCu extension not enabled!");
 }
+
+$data_dir = '/var/www/wpa-sec/public/data';
+
+// K-anonymity cache conf
+if (extension_loaded('redis')) {
+    $redis_sock = '';
+}
 ?>
