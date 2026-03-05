@@ -35,7 +35,7 @@ if (!$json_valid) {
     ddie(400, 'Invalid JSON payload');
 }
 
-//  Connect to pogocache
+// Connect to pogocache
 $r = new Redis();
 try {
     $r->connect($redis_sock);
@@ -45,20 +45,25 @@ try {
 
 // Query pogocache
 $res = $r->mget($json);
-foreach ($res as &$v) {
-    $v = str_split(bin2hex($v), 8);
-}
-$res = array_combine($json, $res);
 
-// Strip mode letter
-$res1 = [];
-foreach ($res as $k => $v) {
-    $res1[substr($k, 1)] = $v;
+$out = [];
+$cnt = count($res);
+
+for ($i=0; $i < $cnt; $i++) {
+    $k = $json[$i];
+    $v = $res[$i] ?? Null;
+
+    if ($v === False || $v === Null) {
+        $out[substr($k, 1)] = Null;
+        continue;
+    }
+
+    $out[substr($k, 1)] = str_split(bin2hex($v), 8);
 }
 
 // Return results
 header('Content-Type: application/json; charset=utf-8');
-echo json_encode($res1);
+echo json_encode($out);
 
 function ddie($errcode = 400, $errmess = 'Go away'): void {
     http_response_code($errcode);
