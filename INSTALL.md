@@ -9,15 +9,16 @@ Requirements
  - 64bit Linux OS - tested with Ubuntu 22.04 LTS x64
  - MySQL database 8.0 or better
  - PHP 8.1 or better, with enabled openssl, curl and APCu modules
- - composer, https://getcomposer.org
+ - [composer](https://getcomposer.org)
  - Apache or other webserver with PHP support, vhost configured with https
  - gcc toolchain
- - hcxpcapngtool tool (min version 6.3.5), part of hcxtools https://github.com/ZerBea/hcxtools
+ - hcxpcapngtool tool (min version 6.3.5), part of [hcxtools](https://github.com/ZerBea/hcxtools)
  - git `sudo apt-get install git`
- - reCAPTCHA API keys for your domain, register here https://www.google.com/recaptcha
+ - reCAPTCHA API keys for your domain, register [here](https://www.google.com/recaptcha)
  - gmail account for outbound mails, easy to change to use any SMTP server
- - routerkeygen-cli, part of routerkeygenPC, https://github.com/routerkeygen/routerkeygenPC
- - (optional) Wigle API key, for geolocation, https://wigle.net
+ - routerkeygen-cli, part of [routerkeygenPC](https://github.com/routerkeygen/routerkeygenPC)
+ - (optional) [Wigle API key](https://wigle.net), for geolocation
+ - (optional) redis php extension and [pogocache](https://pogocache.com) for k-anonymity query interface, tested with v1.3.1
  - (optional) 3wifi API key, for already found PSKs, https://3wifi.stascorp.com (currently defunct, don't use)
 
 Compilation of external tools
@@ -51,6 +52,7 @@ Create crontab entries for running synchronous jobs:
 | `maint.php` | 1 hour | Computes statistics, regenerates cracked.txt, cleanup DB |
 | `rkg.php` | 5 min | Runs `routerkeygnen-cli` over converted hashes. This is required to release hashes for cracking to volunteers, running `help_crack.py` |
 | `wigle.php` | 10 min | Retrieves BSSID geolocation of APs by BSSID |
+| `kquery-update.php` | 1 day | Update k-anonymity query cache and generate json dumps |
 | `3wifi.php` | 10 min | Lookup candidates through 3wifi API. Currently defunct |
 
  Example crontab entry for those can be found in [misc](/misc) directory.
@@ -119,46 +121,16 @@ Web application configuration
 - Copy previously built `hcxpcapngtool` binary to a location, where web server process can execute it, eg. in webserver root
 - Make sure webserver process can write to dictionaries location (to update cracked.txt.gz) and capture file location(`CAP` define from conf.php), where submissions will be written
 - `bosskey` must be 32 byte hexadecimal string, known to you, with which you will be able to see cracked PSKs in clear and search the full database
+- If using k-Anonymity query interface:
+    * make sure `public/data` is writable
+    * fill redis socket path in `conf.php`
+    * optionally, implement rewrite rule like this: `RewriteRule ^(bpmk|bmacssid)$ /index.php?kquery [L]`
 
-Assuming:
-
-- your webserver root vhost location is `/var/www/wpa-sec/public`
-- your cap files location is `/var/www/wpa-sec/cap`
-- your dictionaries location is `/var/www/wpa-sec/public/dict`
-
-conf.php should look something like this:
-
+Cache configuration
+-
+k-Anonymity query interface requires [pogocache](https://pogocache.com) to function. You need to install it and connect through unix socket. Also use persistence option. Run `pogocache` through systemd unit or depending on your distribution. Example commandline:
 ```
-<?php
-// DB Configuration
-$cfg_db_host = 'localhost';
-$cfg_db_user = 'wpa';
-$cfg_db_pass = 'wpapass';
-$cfg_db_name = 'wpa';
-
-// reCaptcha auth
-$publickey = '<your reCAPTCHA public key>';
-$privatekey = '<your reCAPTCHA private key>';
-
-//bosskey
-$bosskey = '01234567890123456789012345678901';
-
-// 3wifi API key
-$wifi3apikey = '<your 3wifi API key>';
-
-// wigle API key
-$wigleapikey = '<your wigle API key>';
-
-// App specific defines
-define('HCXPCAPTOOL', '/var/www/wpa-sec/cap/hcxpcapngtool');
-define('RKG', '/var/www/wpa-sec/cap/routerkeygen-cli');
-
-define('CAP', '/var/www/wpa-sec/cap/');
-define('CRACKED', '/var/www/wpa-sec/public/dict/cracked.txt.gz');
-
-define('SHM', '/tmp/');
-define('MIN_HC_VER', '2.0.0');
-?>
+pogocache -s /run/pogocache-wpasec/pogo-wpasec.sock -p 0 --persist /var/lib/pogocache/wpasec.db --maxmemory 95% --evict no --uring yes
 ```
 
 Mail configuration
