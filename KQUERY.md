@@ -87,9 +87,9 @@ wpa-sec k-anonymity DBs can be freely downloaded and queried offline. This is us
 
 The DBs are gzipped in JSON format:
 
-[https://wpa-sec.stanev.org/data/wpasec_macssid.json.gz]()
+[https://wpa-sec.stanev.org/data/wpasec_macssid.json.gz](https://wpa-sec.stanev.org/data/wpasec_macssid.json.gz)
 
-[https://wpa-sec.stanev.org/data/wpasec_pmk.json.gz]()
+[https://wpa-sec.stanev.org/data/wpasec_pmk.json.gz](https://wpa-sec.stanev.org/data/wpasec_pmk.json.gz)
 
 Updated at least once a day.
 
